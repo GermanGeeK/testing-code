@@ -2,18 +2,27 @@ import pandas as pd
 import numpy as np
 
 #1 import von csvs
-data = pd.read_csv('Bsp. Datenset.csv', delimiter = ';', low_memory = False)
+data = pd.read_csv('Bsp_Datenset_no_nan.csv', delimiter = ';', low_memory = 'False', encoding = 'utf-8')
 
-#2 NaN einfügen
-data.replace('k.A.', np.nan, inplace = True)
+#2 NaN einfügen und auffüllen
+#data.replace('k.A.', np.nan, inplace = True)
+#print(data['Kandidat'])
+#data['Kandidat'].fillna(method = 'ffill', inplace = True)
 
-perso = data['Kandidat']
-person = pd.DataFrame(perso)
-print(person.dtypes)
+#data = data.replace(np.nan, '', regex=True) #wahrscheinlich gar nicht nötig ;)
+#data['Kandidat'] = data['Kandidat'].astype(str)
 
-number = str(['K1', 'K2', 'K3', 'K4'])
-for i in person.iteritems():
-    if i == any(number):
-        print('richtig')
-    else:
-        print('falsch')
+
+#3 Antwort-Spalte erstellen und füllen
+antwort = pd.read_csv('Bsp. Reaktionen.csv', delimiter = ';', low_memory = 'False', encoding = "ISO-8859-1")
+antwort_spalte = antwort['Antwort: ja/nein']
+K1 = data['Kandidat']
+K2 = antwort['Kandidat']
+#for i in np.nditer(antwort_spalte, flags = 'REFS_OK'):
+for i in antwort_spalte.iterrows():
+    if K1.sort_index(inplace = True) == K2.sort_index(inplace = True):
+        data['Antwort'] = i
+
+print(data['Antwort'])
+
+#data.to_csv('Bsp_Datenset_no_nan.csv', sep = ';', index = False)
