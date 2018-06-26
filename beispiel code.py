@@ -2,27 +2,38 @@ import pandas as pd
 import numpy as np
 
 #1 import von csvs
-data = pd.read_csv('Bsp_Datenset_no_nan.csv', delimiter = ';', low_memory = 'False', encoding = 'utf-8')
-
-#2 NaN einfügen und auffüllen
-#data.replace('k.A.', np.nan, inplace = True)
-#print(data['Kandidat'])
-#data['Kandidat'].fillna(method = 'ffill', inplace = True)
-
-#data = data.replace(np.nan, '', regex=True) #wahrscheinlich gar nicht nötig ;)
-#data['Kandidat'] = data['Kandidat'].astype(str)
+data = pd.read_csv('Bsp_Datenset_gemergt.csv', delimiter = ';', low_memory = False, encoding = 'ISO-8859-1')
+# skiprows=1, header=None
 
 
-#3 Antwort-Spalte erstellen und füllen
-antwort = pd.read_csv('Bsp. Reaktionen.csv', delimiter = ';', low_memory = 'False', encoding = "ISO-8859-1")
-antwort_spalte = antwort['Antwort: ja/nein']
-K1 = data['Kandidat']
-K2 = antwort['Kandidat']
-#for i in np.nditer(antwort_spalte, flags = 'REFS_OK'):
-for i in antwort_spalte.iterrows():
-    if K1.sort_index(inplace = True) == K2.sort_index(inplace = True):
-        data['Antwort'] = i
+#2 data cleanup
+del data['Unnamed: 5']
+#data = data.rename(columns={'Kandidat': '1.Kandidat'})
+data = data.sort_index(ascending=True)
+data = data.fillna(method = 'ffill', inplace = False, axis = 0)
+data_nafilled = pd.DataFrame(data=data)
+kandi = data_nafilled.iloc[:,0]
+kandi = pd.DataFrame(data=kandi)
 
-print(data['Antwort'])
 
-#data.to_csv('Bsp_Datenset_no_nan.csv', sep = ';', index = False)
+#3 dummy variablen erstellen
+dummy = pd.get_dummies(data_nafilled.iloc[:,1:]) #alles nach Kandidat-Spalte
+join = kandi.join(dummy, how='inner')
+#join.to_csv('dummy.csv', sep = ';', index = False, encoding = 'ISO-8859-1')
+
+
+#4 grouing nach Kandidat
+
+####backup, das hier funktioniert
+#grouping = join.groupby('Kandidat')
+#grouping_2 = grouping.agg([np.sum])
+#grouping_2.to_csv('Gruppen.csv', sep = ';', index = True, encoding = 'ISO-8859-1')
+####ende backup
+
+
+grouping = join.groupby('Kandidat')
+#input = grouping.iloc[:,:-3]
+#input_2 = input.agg([np.sum])
+target = grouping['Antwort: ja/nein_j','Antwort: ja/nein_n']
+target_2 = grouping.agg([np.mean])
+print(grouping.get_group('K2'))
